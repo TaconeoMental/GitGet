@@ -96,10 +96,10 @@ function download_file()
     fi
 
     curl -s "$repo_url/$1" --create-dirs -o $file_path
-    case `grep -Fxq "<\!DOCTYPE html>" $file_path >/dev/null; echo $?` in
+    case `grep -Exq "<\!DOCTYPE html>" $file_path >/dev/null; echo $?` in
         0)
             rm $file_path
-            exit 1
+            return
             ;;
         1) echo_colour "[+] Downloaded $1" "g" ;;
     esac
