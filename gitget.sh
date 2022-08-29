@@ -90,19 +90,16 @@ function download_initial()
 function download_file()
 {
     local file_path="$GIT_DIR$1"
-    if grep -q "Location" <<< $(curl -sI "$repo_url/$1")
+
+    local response=$(curl -s "$repo_url/$1" --create-dirs -o $file_path)
+    local status_code="${response:${#response}-3}"
+    if grep -Eiq "<\s*\!DOCTYPE\s+html" $file_path >/dev/null || [[ "$status_code" =~ "(400|301)" ]];
     then
+    	echo_colour "[-] $1" "r"
+        rm $file_path
         return
     fi
-
-    curl -s "$repo_url/$1" --create-dirs -o $file_path
-    case `grep -Exq "<\!DOCTYPE html>" $file_path >/dev/null; echo $?` in
-        0)
-            rm $file_path
-            return
-            ;;
-        1) echo_colour "[+] Downloaded $1" "g" ;;
-    esac
+    echo_colour "[+] Downloaded $1" "g"
     for h in $(cat $file_path | grep_hashes | tr '\n' ' ')
     do
         HASHES+=($h)
@@ -119,13 +116,13 @@ function download_hash()
 
 function get_fsck_hashes()
 {
-    local fsck_out=$(git --git-dir="${git_dir}/.git" fsck |& grep_hashes)
+    local fsck_out=$(git --git-dir=$GIT_DIR fsck |& grep_hashes)
     echo $fsck_out
 }
 
 function get_reset_hashes()
 {
-    local reset_out=$(git --git-dir="${git_dir}/.git" reset --hard HEAD |& grep_hashes)
+    local reset_out=$(git reset --hard HEAD |& grep_hashes)
     echo $reset_out
 }
 
