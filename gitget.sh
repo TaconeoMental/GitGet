@@ -46,7 +46,7 @@ fi
 # Helpers
 function grep_hashes()
 {
-    local out=$(grep -av "\.git" - | grep -Eoa "[a-f0-9]{2}[a-f0-9]{38}" | sort -u)
+    local out=$(grep -av "\.git" - | grep -Eoa "[a-f0-9]{40}" | sort -u)
     echo $out
 }
 
@@ -91,9 +91,9 @@ function download_file()
 {
     local file_path="$GIT_DIR$1"
 
-    local response=$(curl -s "$repo_url/$1" --create-dirs -o $file_path)
+    local response=$(curl -s -w "%{http_code}" "$repo_url/$1" --create-dirs -o $file_path)
     local status_code="${response:${#response}-3}"
-    if grep -Eiq "<\s*\!DOCTYPE\s+html" $file_path >/dev/null || [[ "$status_code" =~ "(400|301)" ]];
+    if grep -Eiq "<\!DOCTYPE html" $file_path >/dev/null || [ $status_code != 200 ];
     then
     	echo_colour "[-] $1" "r"
         rm $file_path
@@ -116,13 +116,13 @@ function download_hash()
 
 function get_fsck_hashes()
 {
-    local fsck_out=$(git --git-dir=$GIT_DIR fsck |& grep_hashes)
+    local fsck_out=$(git --git-dir=$GIT_DIR fsck |& grep -E "(blob|tree|commit)" | grep_hashes)
     echo $fsck_out
 }
 
 function get_reset_hashes()
 {
-    local reset_out=$(git reset --hard HEAD |& grep_hashes)
+    local reset_out=$(cd $git_dir; git reset --hard HEAD |& grep_hashes)
     echo $reset_out
 }
 
@@ -155,11 +155,8 @@ function main
     echo_colour "[*] Looking for missing objects..." "y"
     recursive_download get_fsck_hashes
 
-    cwd=$(pwd)
-    cd $git_dir
     echo_colour "[*] Recovering files" "y"
     recursive_download get_reset_hashes
-    cd $cwd
 }
 
 main
