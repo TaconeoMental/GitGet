@@ -10,7 +10,7 @@ Usage: ./gitget.sh -r [REPO-URL] -o [OUTPUT-DIR]
 
 ## Screenshots
 ### Directory listing enabled
-<img width="60%" src="https://raw.githubusercontent.com/TaconeoMental/GitGet/main/assets/dir_listing.png" />
+<img src="https://raw.githubusercontent.com/TaconeoMental/GitGet/main/assets/dir_listing.png" />
 
 ### Directory listing disabled
 <img width="60%" src="https://raw.githubusercontent.com/TaconeoMental/GitGet/main/assets/no_dir_listing.png" />
