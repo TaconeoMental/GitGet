@@ -102,7 +102,7 @@ function download_file()
     if [ ! -f "$file_path" ];
     then
         # We verify the HTTP status code and the content-type header
-        local headers=$(curl -sI -w "%{http_code}" "$REPO_URL$1")
+        local headers=$(curl -skI -w "%{http_code}" "$REPO_URL$1")
         local status_code="${headers:${#headers}-3}"
         if grep -qE "^content-type:.*html" <<< "$headers" || [ $status_code != 200 ];
         then
@@ -113,7 +113,7 @@ function download_file()
         fi
 
         # Everything seems ok. We download the file
-        curl -s "$REPO_URL$1" --create-dirs -o "$file_path"
+        curl -ks "$REPO_URL$1" --create-dirs -o "$file_path"
         echo_colour "[+] Downloaded $1" "g"
     fi
 
@@ -169,13 +169,14 @@ function main
     print_banner
 
     # We see if directory listing is enabled
-    status_code=$(curl -I --write-out '%{http_code}' --output /dev/null --silent "$REPO_URL")
+    status_code=$(curl -kI --write-out '%{http_code}' --output /dev/null --silent "$REPO_URL")
     if [ "$status_code" = 200 ];
     then
         # If it is, we just download recursively
         echo_colour "[+] Directory listing enabled! Downloading all files" "g"
         wget "$REPO_URL" \
             --recursive \
+            --no-check-certificate \
             --execute robots=off \
             --no-parent \
             --quiet \
